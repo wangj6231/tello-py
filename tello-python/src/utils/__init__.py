@@ -23,3 +23,6 @@ def get_drone_position():
 def norm(x):
     res = np.sqrt(np.square(x[0]) + np.square(x[1]))
     return res
+
+def calculate_distance(point1, point2):
+    return np.sqrt(np.square(point1[0] - point2[0]) + np.square(point1[1] - point2[1]))

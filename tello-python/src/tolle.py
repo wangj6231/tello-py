@@ -9,7 +9,7 @@ import time
 import os
 import numpy as np
 import heapq
-from utils import norm  # 確保 utils.py 在相同目錄下
+from utils import calculate_distance, obstacle_avoidance, get_drone_position
 
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
@@ -114,7 +114,7 @@ def demand_matrix(s, service_list, M, N, r):
         server_demand = server[2]
         if server_demand <= 0:
             demand = 0
-        elif norm(pos - server_pos) < r:
+        elif calculate_distance(pos, server_pos) < r:
             demand += server_demand * M
     return demand
 
@@ -125,7 +125,7 @@ def danger_matrix(s, N, E, K, to_node):
     s1 = np.array(s) / N
     s2 = np.array([(x) / N, (y) / N])
     delta = 0
-    dis = norm(s1 - s2)
+    dis = calculate_distance(s1, s2)
     weight_A = dis
     while dis > 0.000001:
         s1, move = next_step(s1, s2, step_dis)
@@ -135,7 +135,7 @@ def danger_matrix(s, N, E, K, to_node):
     return weight_A
 
 def next_step(s1, s2, step_dis):
-    move = norm(s1 - s2)
+    move = calculate_distance(s1, s2)
     if move <= step_dis:
         s3 = s2
     else:
@@ -193,6 +193,8 @@ def planning(pos, tar, E, N, K, M, service_list, r):
 def move_drone_along_path(drone, path):
     for step in path:
         print(f"Moving to {step}")
+        # 假設每一步都是一個單位距離
+        drone.move_forward(20)  # 根據實際情況調整
         time.sleep(1)
 
 def process_video_stream(drone):
@@ -202,7 +204,21 @@ def process_video_stream(drone):
         if not ret:
             continue
         # 用於障礙物檢測的工藝框架
-        # 檢測障礙物並調整路徑
+        obstacles = obstacle_avoidance(frame)
+        if obstacles:
+            print("Obstacles detected:", obstacles)
+            # 根據障礙物調整路徑的邏輯
+            pos = get_drone_position()
+            tar = (5, 5)  # 目標位置可以根據需要調整
+            E = np.zeros((20, 20))
+            N = 20
+            K = 1.0
+            M = 1.0
+            service_list = []
+            r = 1.0
+            path = planning(pos, tar, E, N, K, M, service_list, r)
+            print("Adjusted Path:", path)
+            move_drone_along_path(drone, path)
         cv2.imshow('Drone Camera', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
