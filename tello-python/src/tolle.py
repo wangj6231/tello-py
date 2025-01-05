@@ -9,7 +9,7 @@ import time
 import os
 import numpy as np
 import heapq
-from utils import norm 
+from utils import norm  # 確保 utils.py 在相同目錄下
 
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 

@@ -47,14 +47,3 @@ def get_config():
 def norm(x):
     res = np.sqrt(np.square(x[0]) + np.square(x[1]))
     return res
-
-
-
-
-
-            
-
-   
-    
-    
-    
