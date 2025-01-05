@@ -1,11 +1,15 @@
 import cv2
 import mediapipe as mp
 from djitellopy import Tello
+import pywifi 
+from pywifi import const
+import comtypes
 import threading
 import time
 import os
 import numpy as np
 import heapq
+from utils import norm 
 
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
@@ -59,6 +63,48 @@ class GridWithWeights(SquareGrid):
         A = danger_matrix(now_node, N, E, K, to_node) - demand
         self.weights[to_node] = A
         return A
+
+def connect_to_open_wifi(ssid): 
+
+    wifi = pywifi.PyWiFi() 
+
+    iface = wifi.interfaces()[0] 
+
+    iface.disconnect() 
+
+    time.sleep(2) 
+
+    profile = pywifi.Profile() 
+
+    profile.ssid = ssid   
+
+    profile.auth = const.AUTH_ALG_OPEN 
+
+    profile.akm.append(const.AKM_TYPE_NONE) 
+
+    profile.cipher = const.CIPHER_TYPE_NONE 
+
+    iface.remove_all_network_profiles() 
+
+    temp_profile = iface.add_network_profile(profile) 
+
+    iface.connect(temp_profile) 
+
+    time.sleep(10) 
+
+ 
+
+    if iface.status() == const.IFACE_CONNECTED: 
+
+        print(f"已連接 {ssid}") 
+
+        return True 
+
+    else: 
+
+        print(f"連接到 {ssid} 失敗") 
+
+        return False 
 
 def demand_matrix(s, service_list, M, N, r):
     pos = np.array(s) / N
@@ -170,7 +216,8 @@ def main():
         global drone
         drone = Tello()
         drone.connect()
-        drone.wait_for_connection(10.0)
+        # 啟動無人機鏡頭
+        drone.streamon()
         threading.Thread(target=process_video_stream, args=(drone,)).start()
         pos = (0, 0)
         tar = (5, 5)
