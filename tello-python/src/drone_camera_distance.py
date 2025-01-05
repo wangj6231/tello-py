@@ -2,14 +2,20 @@ import cv2
 import numpy as np
 import torch
 from djitellopy import Tello
+from yolov5 import YOLOv5
+import yaml
 
 # 載入 YOLOv5 模型
-model = torch.hub.load('ultralytics/yolov5', 'yolov5s')
+model = YOLOv5("yolov5s.pt", device="cpu")
+
+# 載入 YOLOv5 配置檔案
+with open("yolov5-fpn.yaml", 'r') as file:
+    config = yaml.safe_load(file)
 
 def measure_distance(frame):
     # 使用 YOLOv5 模型檢測障礙物
-    results = model(frame)
-    labels, cord = results.xyxyn[0][:, -1], results.xyxyn[0][:, :-1]
+    results = model.predict(frame)
+    labels, cord = results.xyxy[0][:, -1], results.xyxy[0][:, :-1]
     
     # 假設第一個檢測到的物體是障礙物
     if len(labels) > 0:

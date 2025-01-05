@@ -10,6 +10,8 @@ import os
 import numpy as np
 import heapq
 from utils import calculate_distance, obstacle_avoidance, get_drone_position
+import drone_camera_distance 
+import stereoconfig
 
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
@@ -246,6 +248,19 @@ def main():
         path = planning(pos, tar, E, N, K, M, service_list, r)
         print("Planned Path:", path)
         move_drone_along_path(drone, path)
+        
+        # 使用 drone_camera_distance 模組測量距離
+        frame_read = drone.get_frame_read()
+        while True:
+            frame = frame_read.frame
+            distance = drone_camera_distance.measure_distance(frame)
+            if distance:
+                print(f"Distance to obstacle: {distance:.2f} cm")
+            cv2.imshow("Tello Camera", frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+        drone.streamoff()
+        cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     main()
